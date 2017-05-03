@@ -7,13 +7,18 @@
 
 " Check compiler
 if has('win32') && executable('cl')
-    let s:cxx_comp = {s, o->printf('cmd /c cl %s /Fo"%s" /Fe"%s"',
+    let s:cxx_comp = {s, o->printf('cl %s /Fo"%s" /Fe"%s"',
                 \ s, fnamemodify(o, ':p:r') . '.obj', o)}
 elseif executable('g++')
     let s:cxx_comp = {s, o->printf('g++ -std=c++11 %s -o %s', s, o)}
 elseif executable('clang++')
     let s:cxx_comp = {s, o->printf('clang++ -std=c++11 %s -o %s', s, o)}
 endif
+
+fun! s:tempfile(ex)
+    let f = fnamemodify(tempname(), ':r') . a:ex
+    return has('win32')? iconv(f, 'gbk', 'utf-8'): f
+endf
 
 let s:stdin  = ''
 " Set or show the stdin file
@@ -60,8 +65,8 @@ fun! qrun#qfrun(...)
     return|endif
     cexpr ''
     let cmd = join(a:000)
-    let s:pid = job#start(cmd, { 'onout' : 'job#cb#add2qfb',
-                                \'onerr' : 'job#cb#add2qfb',
+    let s:pid = job#start(cmd, { 'onout' : 'job#cb_add2qfb',
+                                \'onerr' : 'job#cb_add2qfb',
                                 \'onexit': funcref('s:onexit')})
 endf
 
@@ -72,7 +77,7 @@ fun! qrun#cxx()
     endif
     update
     if !exists('b:binfile')
-        let b:binfile = fnamemodify(tempname(), ':r') . '.exe'
+        let b:binfile = s:tempfile('.exe')
     endif
     let g:RunSuccess = [printf('QExec %s', b:binfile)]
     if !empty(s:stdin)

@@ -5,8 +5,6 @@
 " Last Change:  2017/4/23
 " =============================================================================
 
-call job#cb#init()
-
 if has('win32')
 fun! s:iconv(data)
     return iconv(a:data, 'gbk', 'utf-8')
@@ -23,12 +21,14 @@ fun! job#start(cmd, opt)
     if has_key(a:opt, 'onout')
         let OUTCB = a:opt['onout']
         if type(OUTCB)==1|let OUTCB = funcref(OUTCB)|endif
-        let opts.on_stdout = {i, d, e->map(copy(d), {i,v->OUTCB(i, v)})}
+        let opts.on_stdout = {i, d, e->
+                    \ map(copy(d), {i,v->OUTCB(i, s:iconv(v))})}
     endif
     if has_key(a:opt, 'onerr')
         let ERRCB = a:opt['onerr']
         if type(ERRCB)==1|let ERRCB = funcref(ERRCB)|endif
-        let opts.on_stderr = {i, d, e->map(copy(d), {i,v->ERRCB(i, v)})}
+        let opts.on_stderr = {i, d, e->
+                    \ map(copy(d), {i,v->ERRCB(i, s:iconv(v))})}
     endif
     if has_key(a:opt, 'onexit')
         let EXITCB = a:opt['onexit']
@@ -88,3 +88,11 @@ fun! job#running(job)
     return job_status(a:job) == 'run'
 endf
 endif
+
+fun! job#cb_add2qf(job, d)
+    cadde a:d
+endf
+fun! job#cb_add2qfb(job, d)
+    cadde a:d
+    cbottom
+endf
