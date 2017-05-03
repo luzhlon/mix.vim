@@ -5,10 +5,6 @@
 " Last Change:  2017/1/31
 " =============================================================================
 
-com! -nargs=* -complete=shellcmd QFRun call job#util#qfrun(<f-args>)
-com! -nargs=1 -complete=shellcmd Exec call util#Exec(join([<f-args>]))
-com! -nargs=1 -complete=shellcmd TExec call util#ExeInTerm(join([<f-args>]))
-
 "change current directory
 com! Locate if &buftype == ''|lc %:p:h |endif
 "open a scratch buffer

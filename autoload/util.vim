@@ -72,21 +72,3 @@ fun! util#QuitBuffer()
     endif
     sil! exe 'confirm' 'bw' curbuf
 endf
-" Executable file
-fun! util#Exec(f)
-    exe (has('win32') ? '!start': '!') fnamemodify(a:f, ':p:S')
-endf
-" Execute a file in nvim's terminal
-fun! util#ExeInTerm(f)
-    for i in range(1, winnr('$'))
-        let bt = getbufvar(winbufnr(i), '&bt')
-        if bt == 'terminal'
-            exe i 'winc w'
-            call feedkeys("i\<c-u>")
-            call feedkeys(fnameescape(a:f))
-            call feedkeys("\<cr>")
-            return
-        endif
-    endfo
-    return util#Exec(a:f)
-endf

@@ -4,27 +4,28 @@
 " Function:     Popup a menu with a user-defined keymap
 " Last Change:  2017/2/19
 " =============================================================================
-
+scripte utf-8
 let s:Names = {}            "顶级菜单名称
 let s:Menus = {}            "顶级菜单表
-let s:BufMenus = {}         "buffer相关的菜单表
 let s:last  = ''            "最后一次执行的命令
 let s:stack = []            "菜单栈
 
 "添加菜单:(submenu, [key, command, description])
 fun! popup#add(key, name, ...)
+    if !a:0|return|endif
     let s:Names[a:key] = a:name
     let s:Menus[a:key] =
-\           type(a:1[0])==3 ? a:1 : copy(a:000)
+          \ type(a:1[0])==3 ? a:1 : copy(a:000)
 endf
 "添加buffer相关的菜单
-fun! popup#addl(bt, key, ...)
-    if !has_key(s:BufMenus, a:bt)
-        let s:BufMenus[a:bt] = {}
+fun! popup#addl(key, name, ...)
+    if !a:0|return|endif
+    if !exists('b:BufMenus')
+        let b:BufMenus = {}
     endif
-    let m = s:BufMenus[a:bt]
-    let m[a:key] =
-\           type(a:1[0])==3 ? a:1 : copy(a:000)
+    let s:Names[a:key] = a:name
+    let b:BufMenus[a:key] =
+          \ type(a:1[0])==3 ? a:1 : copy(a:000)
 endf
 "删除菜单
 fun! popup#remove(key)
@@ -38,11 +39,8 @@ endf
 "返回顶级菜单和buffer菜单合并的结果
 fun! s:getmenu(key)
     let m = [] | let bm = []
-    if has_key(s:BufMenus, &ft)
-        let bms = s:BufMenus[&ft]
-        if has_key(bms, a:key)
-            let bm = bms[a:key]
-        endif
+    if exists('b:BufMenus') && has_key(b:BufMenus, a:key)
+        let bm = b:BufMenus[a:key]
     endif
     if has_key(s:Menus, a:key)
         let m = deepcopy(s:Menus[a:key])
@@ -64,14 +62,17 @@ fun! popup#popup(key)
         let key = s:popup()   "显示菜单内容
         let item = s:findItem(key)
         if empty(item)|break|endif
-        let [k, n, c] = item                "key, name, command
-        let t = type(c)
-        if t == 4                           "有子菜单
-            call s:enterMenu(n, c['item'])
-        elseif t == 3
-            call s:enterMenu(n, c)          "有子菜单
+        let [k, n, C] = item                "key, name, command
+        let t = type(C)
+        if t == v:t_dict                    "有子菜单
+            call s:enterMenu(n, C['item'])
+        elseif t == v:t_list
+            call s:enterMenu(n, C)          "有子菜单
+        elseif t == v:t_func
+            let s:last = C()
+            return s:last
         else
-            let s:last=c|return c
+            let s:last=C|return C
         endif
     endw
     return ''
@@ -91,16 +92,16 @@ fun! s:echoPrompt()
     echoh Boolean|echon join(l, ' → ') ":\n"
     "显示所有的菜单条目
     for item in items
-        let [k, n, c] = item                "key, name, command
+        let [k, n, C] = item                "key, name, command
         echoh Type| echon '  '.n
-        let t = type(c)
+        let t = type(C)
         if t == 4 || t == 3                 "有子菜单
             echoh Underlined   |echon '('.k.")"
             echoh None         |echon "\t\t\t\t"
             echoh Comment      |echon ">\n"
         else
             echoh Underlined   |echon '('.k.")"
-            echoh Include      |echon "\t\t".strtrans(c) "\n"
+            echoh Include      |echon "\t\t".strtrans(string(C)) "\n"
         endif
     endfo
     echoh None
