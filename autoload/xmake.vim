@@ -116,6 +116,7 @@ fun! xmake#buildrun(run)
     "启动xmake运行
     let s:job = job#start(['xmake build', s:target], {
                 \ 'onout': funcref('job#cb_add2qf'),
+                \ 'onerr': funcref('job#cb_add2qf'),
                 \ 'onexit': funcref('OnQuit')})
 endf
 "后台运行xmake命令

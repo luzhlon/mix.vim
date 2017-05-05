@@ -7,12 +7,11 @@
 
 " Check compiler
 if has('win32') && executable('cl')
-    let s:cxx_comp = {s, o->printf('cl %s /Fo"%s" /Fe"%s"',
-                \ s, fnamemodify(o, ':p:r') . '.obj', o)}
+    let s:cxx_comp = {s, o->qrun#qfrun(['cl', s, '/Fo:', fnamemodify(o, ':p:r'), '/Fe:', o])}
 elseif executable('g++')
-    let s:cxx_comp = {s, o->printf('g++ -std=c++11 %s -o %s', s, o)}
+    let s:cxx_comp = {s, o->qrun#qfrun(['g++', '-std=c++11', s, '-o', o])}
 elseif executable('clang++')
-    let s:cxx_comp = {s, o->printf('clang++ -std=c++11 %s -o %s', s, o)}
+    let s:cxx_comp = {s, o->qrun#qfrun(['clang++', '-std=c++11', s, '-o', o])}
 endif
 
 fun! s:tempfile(ex)
@@ -64,7 +63,7 @@ fun! qrun#qfrun(...)
         echom 'A task is running'
     return|endif
     cexpr ''
-    let cmd = join(a:000)
+    let cmd = type(a:1)==v:t_list? a:1 : join(a:000)
     let s:pid = job#start(cmd, { 'onout' : 'job#cb_add2qfb',
                                 \'onerr' : 'job#cb_add2qfb',
                                 \'onexit': funcref('s:onexit')})
@@ -86,8 +85,7 @@ fun! qrun#cxx()
     let g:RunSuccess = join(g:RunSuccess)
     " The source file is newer than binary
     if getftime(expand('%')) > getftime(b:binfile)
-        let cmd = s:cxx_comp(expand('%'), fnameescape(b:binfile))
-        exe 'QFRun' cmd
+        call s:cxx_comp(expand('%'), fnameescape(b:binfile))
     else
         exe g:RunSuccess
     endif

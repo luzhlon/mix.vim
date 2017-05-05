@@ -85,7 +85,11 @@ fun! job#success(job)
 endf
 " If job is running
 fun! job#running(job)
-    return job_status(a:job) == 'run'
+    try
+        return job_status(a:job) == 'run'
+    catch
+        return 0
+    endt
 endf
 endif
 

@@ -26,6 +26,9 @@ mix.vim是一份插件合集，包括一些第三方插件以及我自己编写�
   * autoload/log.vim
 * job.vim ------------------- 跨vim8和neovim的job库
   * autoload/job*
+* qrun.vim ------------------ 快速运行插件(C/C++)
+  * autoload/qrun.vim
+  * plugin/qrun.vim
 * work.vim ------------------ Vim工作空间插件
   * autoload/work.vim
   * plugin/work*
