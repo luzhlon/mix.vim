@@ -8,10 +8,13 @@
 " Check compiler
 if has('win32') && executable('cl')
     let s:cxx_comp = {s, o->qrun#qfrun(['cl', s, '/Fo:', fnamemodify(o, ':p:r'), '/Fe:', o])}
+    compiler msvc
 elseif executable('g++')
     let s:cxx_comp = {s, o->qrun#qfrun(['g++', '-std=c++11', s, '-o', o])}
+    compiler gcc
 elseif executable('clang++')
     let s:cxx_comp = {s, o->qrun#qfrun(['clang++', '-std=c++11', s, '-o', o])}
+    compiler gcc
 endif
 
 fun! s:tempfile(ex)
@@ -30,7 +33,7 @@ fun! qrun#stdin(...)
 endf
 " Execute a command
 fun! s:execmd(cmd)
-    exe (has('win32') ? '!start': '!') fnamemodify(a:cmd, ':p:S')
+    exe (has('win32') ? '!start': '!') a:cmd
 endf
 " Execute a command
 fun! qrun#exec(cmd)
@@ -91,3 +94,24 @@ fun! qrun#cxx()
     endif
 endf
 
+fun! qrun#java()
+    if !executable('javac')
+        echom 'javac not available'
+        return
+    endif
+    compiler javac
+    update
+    if !exists('b:binfile')
+        let b:binfile = expand('%') . '.class'
+    endif
+    if !empty(s:stdin)
+        call add(g:RunSuccess, '< ' . s:stdin)
+    endif
+    let g:RunSuccess = [printf('QExec java %s', expand('%:r'))]
+    let g:RunSuccess = join(g:RunSuccess)
+    if getftime(expand('%')) > getftime(b:binfile)
+        call qrun#qfrun(['javac', expand('%')])
+    else
+        exe g:RunSuccess
+    endif
+endf
