@@ -63,12 +63,15 @@ endtry
 endf
 " Quit buffer but not with the window close
 fun! util#QuitBuffer()
+    if &bt=='nofile' && 2 == confirm('Not a file, continue quit?', "&Yes\n&No", 2, "Warning")
+        return
+    endif
     let curbuf = bufnr('%')
     let a = bufnr('#')
-    if bufexists(a) && getbufvar(a, '&buftype') == ''
+    if bufexists(a) && getbufvar(a, '&bt') == ''
         b!#
     else
         bnext
     endif
-    sil! exe 'confirm' 'bw' curbuf
+    exe 'confirm' 'bw' curbuf
 endf
